@@ -1,12 +1,18 @@
+using JetBrains.Annotations;
 using UnityEngine;
 
 public abstract class Item : MonoBehaviour
 {
-    public Sprite sprite;
+    [SerializeField] private Sprite _sprite;
+    [SerializeField] private string Name = "Item";
 
-    private void Awake()
+    private void Start()
     {
-        GetComponent<SpriteRenderer>().sprite = sprite;
+        GetComponent<SpriteRenderer>().sprite = _sprite;
         
+    }
+    public void SetName()
+    {
+        gameObject.name = Name;
     }
 }

@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI;
 
 public class Board : MonoBehaviour
 {
@@ -15,6 +16,9 @@ public class Board : MonoBehaviour
 
     [SerializeField] private float _tileSize;
     [SerializeField] private float _itemSize;
+
+    private Tile _previousSelected;
+    [SerializeField] private Color _selectedColor = Color.gray;
 
     private Tile[,] _tiles;
 
@@ -85,7 +89,6 @@ public class Board : MonoBehaviour
             }
         }
     }
-
     private List<Tile[]> FindMatches()
     {
         List<Tile[]> allMatches = new List<Tile[]>();
@@ -211,7 +214,132 @@ public class Board : MonoBehaviour
         }
     }
 
+    private void ClearAndFillTiles()
+    {
+        List<Tile[]> matches = FindMatches();
+        bool condition = false;
+        do
+        {
+            bool hasMatches = matches.Count > 0;
+            if (hasMatches) ManageMatches(matches);
 
+            for (int column = 0; column < _tiles.GetLength(0); column++)
+            {
+                FillColumn(column);
+            }
+
+            matches = FindMatches();
+            condition = matches.Count > 0;
+        } while (condition);
+
+    }
+    private void ManageMatches(List<Tile[]> matches)
+    {
+        foreach(var match in matches)
+        {
+            int combinationNum = match.Length;
+            foreach (var tile in match)
+            {
+                tile.ClearItem();
+            }
+        }
+    }
+
+    private void FillColumn(int column)
+    {
+        Tile[] tiles = new Tile[_tiles.GetLength(1)];
+        for (int i = 0; i < _tiles.GetLength(1); i++)
+        {
+            tiles[i] = _tiles[column, i];
+        }
+
+        bool hasNullItemUnder;
+        do
+        {
+            hasNullItemUnder = false;
+            foreach (var tile in tiles)
+            {
+                if (tile.Y == 0 || tile.Item == null) continue;
+                if (tiles[tile.Y - 1].Item == null)
+                {
+                    hasNullItemUnder = true;
+
+                    tiles[tile.Y - 1].SetItem(tile.Item);
+                    tile.ClearItem();
+                }
+            }
+        } while (hasNullItemUnder);
+
+        foreach (var tile in tiles)
+        {
+            if (tile.Item == null)
+            {
+                int random = Random.Range(0, _fruits.Length);
+                tile.SetItem(_fruits[random].GetComponent<Item>());
+            }
+        }
+    }
+
+    public void ClickOnTile(Tile tile)
+    {
+
+        if (tile.Item == null)
+        {
+            return;
+        }
+
+        if (tile.IsSelected)
+        {
+            tile.Deselect();
+            _previousSelected = null;
+        }
+        else
+        {
+            if (_previousSelected == null)
+            {
+                tile.Select(_selectedColor);
+                _previousSelected = tile;
+            }
+            else
+            {
+                if ( System.Math.Abs(_previousSelected.X - tile.X) > 1 || System.Math.Abs(_previousSelected.Y - tile.Y) > 1 || 
+                    System.Math.Abs(_previousSelected.X - tile.X) == System.Math.Abs(_previousSelected.Y - tile.Y))
+                {
+                    _previousSelected.Deselect();
+                    _previousSelected = null;
+                }
+                else
+                {
+                    
+                    _previousSelected.Deselect();
+                    SwapItemInTwoTiles(_previousSelected, tile);
+
+                    if (tile.Item is Fruit && _previousSelected.Item is Fruit && FindMatches().Count <= 0)
+                    {
+                        SwapItemInTwoTiles(_previousSelected, tile);
+                        _previousSelected = null;
+                    }
+                    else
+                    {
+                        _previousSelected = null;
+                        ClearAndFillTiles();
+                    }
+
+                }
+            }
+        }
+    }
+
+    private void SwapItemInTwoTiles(Tile tile1, Tile tile2)
+    {
+        Item tempItem = tile1.Item;
+
+        tile1.ClearItem();
+        tile1.SetItem(tile2.Item);
+
+        tile2.ClearItem();
+        tile2.SetItem(tempItem);
+    }
 }
 
 
