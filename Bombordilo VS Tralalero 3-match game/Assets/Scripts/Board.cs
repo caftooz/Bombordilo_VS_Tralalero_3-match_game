@@ -248,8 +248,19 @@ public class Board : MonoBehaviour
             foreach (var match in matches)
             {
                 int combinationNum = match.Length;
+                Tile firstTile = match[0];
+                firstTile.ClearItem();
+                foreach (var powerup in _powerupPrefabs)
+                {
+                    if (combinationNum == powerup.GetComponent<Powerup>().CombinationNum)
+                    {
+                        firstTile.CreateItem(powerup.GetComponent<Item>());
+                    }
+                }
+
                 foreach (var tile in match)
                 {
+                    if (tile == firstTile) continue;
                     tile.ClearItem();
                 }
             }
@@ -292,6 +303,7 @@ public class Board : MonoBehaviour
                                 Item item = _tiles[x, ny].Item;
                                 _tiles[x, ny].Item = null;
                                 _tiles[x, y].Item = item;
+                                item.transform.SetParent(_tiles[x, y].transform, true);
 
                                 StartFallAnimation(item, _tiles[x, y]);
                                 break;
