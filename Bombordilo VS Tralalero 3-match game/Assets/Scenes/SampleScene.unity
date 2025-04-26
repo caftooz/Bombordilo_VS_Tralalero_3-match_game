@@ -392,7 +392,11 @@ MonoBehaviour:
   - {fileID: 5516280568738676241, guid: 186dcce50e6aced4cb095cc89e749689, type: 3}
   - {fileID: 2776192790700755713, guid: f80c6f781f63497499340f7c0378d0b1, type: 3}
   - {fileID: 5212327893741760292, guid: 9d33710a197ab34489df8ed2e7386ffc, type: 3}
-  _powerupPrefabs: []
+  _powerupPrefabs:
+  - {fileID: 7112274745883495555, guid: fa926dd7c8136884b884c09005736f50, type: 3}
+  - {fileID: 9120284349693290435, guid: 6ecf4cb7e9721e54490b39d2cf9f1fc2, type: 3}
+  - {fileID: 5815858544155181993, guid: 5adaa79f5a3731f41b23fdd69c02a198, type: 3}
+  - {fileID: 1289177758291085207, guid: fda510844ea4e604baf4a63373c5aff9, type: 3}
   _tilePrefab: {fileID: 1485079304456130284, guid: 1fe76ce06d19b364ea6fb78211f08493, type: 3}
   _tileSize: 0.9
   _itemSize: 0.17
@@ -463,6 +467,9 @@ MonoBehaviour:
   _swapDuration: 0.1
   _swapOvershoot: 0.2
   _swapBounceDuration: 0.15
+  _fireworkSpeed: 10
+  _fireworkDuration: 1
+  _flyingFireworkPrefab: {fileID: 5635289800837907648, guid: ceb1b2d2d98cb664890360abcf436833, type: 3}
 --- !u!1 &791809579
 GameObject:
   m_ObjectHideFlags: 0

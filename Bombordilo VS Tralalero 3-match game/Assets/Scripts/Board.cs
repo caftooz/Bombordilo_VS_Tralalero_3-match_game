@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using static UnityEngine.Rendering.DebugUI;
 
@@ -46,6 +47,11 @@ public class Board : MonoBehaviour
     [SerializeField] private float _swapDuration = 0.1f;
     [SerializeField] private float _swapOvershoot = 0.2f;
     [SerializeField] private float _swapBounceDuration = 0.15f;
+
+    [Header("Firework Settings")]
+    [SerializeField] private float _fireworkSpeed = 10f;
+    [SerializeField] private float _fireworkDuration = 0.5f;
+    [SerializeField] private GameObject _flyingFireworkPrefab;
 
     private bool _isPlayingAnim;
 
@@ -169,7 +175,7 @@ public class Board : MonoBehaviour
                         // Если вышли за границы или тип не совпадает → стоп
                         if (checkX >= width || checkY >= height ||
                             _tiles[checkX, checkY].Item == null || _tiles[x, y].Item is not Fruit ||
-                            ((Fruit)_tiles[checkX, checkY].Item).fruitType != fruitType)
+                            (_tiles[checkX, checkY].Item as Fruit)?.fruitType != fruitType)
                             break;
 
                         line.Add(_tiles[checkX, checkY]);
@@ -242,7 +248,7 @@ public class Board : MonoBehaviour
             }
         }
     }
-
+    //==================================================================================
     private IEnumerator ClearAndFillTiles()
     {
         _isPlayingAnim = true;
@@ -272,6 +278,13 @@ public class Board : MonoBehaviour
                 {
                     if (combinationNum == powerup.GetComponent<Powerup>().CombinationNum)
                     {
+                        if (powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkV ||
+                            powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkH)
+                        {
+                            bool isHorizontal = isHorisontalMatch(match);
+                            if (powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkV && isHorizontal) continue;
+                            if (powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkH && !isHorizontal) continue;
+                        }
                         firstTile.CreateItem(powerup.GetComponent<Item>());
                     }
                 }
@@ -281,6 +294,12 @@ public class Board : MonoBehaviour
                     if (tile == firstTile) continue;
                     tile.ClearItem();
                 }
+            }
+
+            bool isHorisontalMatch(Tile[] match)
+            {
+                if (match[0].Y - match[1].Y == 0) return true;
+                return false;
             }
         }
         IEnumerator FillBoard()
@@ -438,6 +457,7 @@ public class Board : MonoBehaviour
 
             while (elapsedTime < effectDuration)
             {
+                if (item.IsDestroyed()) yield break;
                 float progress = elapsedTime / effectDuration;
                 progress = Mathf.SmoothStep(0f, 1f, progress);
 
@@ -488,6 +508,11 @@ public class Board : MonoBehaviour
         {
             tile.Deselect();
             _previousSelected = null;
+            if (tile.Item is Powerup powerup)
+            {
+                yield return StartCoroutine(UsePowerup(powerup, null));
+                yield return StartCoroutine(ClearAndFillTiles());
+            }
         }
         else
         {
@@ -509,6 +534,10 @@ public class Board : MonoBehaviour
                     _isPlayingAnim = true;
                     _previousSelected.Deselect();
                     yield return StartCoroutine(SwapItemsWithAnimation(_previousSelected, tile));
+                    if (_previousSelected.Item is Powerup || tile.Item is Powerup)
+                    {
+                        yield return StartCoroutine(UsePowerups(_previousSelected, tile));
+                    }
 
                     if (tile.Item is Fruit && _previousSelected.Item is Fruit && FindMatches().Count <= 0)
                     {
@@ -608,5 +637,133 @@ public class Board : MonoBehaviour
             if (tile2.Item != null)
                 tile2.Item.transform.SetParent(tile2.transform);
         }
+    }
+    //==================================================================================
+    private IEnumerator UsePowerups(Tile tile1, Tile tile2)
+    {
+        if (tile1.Item is Powerup && tile2.Item is Powerup)
+        {
+            Powerup powerup1 = (Powerup)tile1.Item;
+            Powerup powerup2 = (Powerup)tile2.Item;
+        } 
+        else if (tile1.Item is Powerup && tile2.Item is not Powerup)
+        {
+            Powerup powerup = (Powerup)tile1.Item;
+            Fruit   fruit   = (Fruit)  tile2.Item;
+
+            yield return StartCoroutine(UsePowerup(powerup, fruit));
+        }
+        else if (tile1.Item is not Powerup && tile2.Item is Powerup)
+        {
+            Powerup powerup = (Powerup)tile2.Item;
+            Fruit   fruit   = (Fruit)  tile1.Item;
+
+            yield return StartCoroutine(UsePowerup(powerup, fruit));
+        }
+    }
+    private IEnumerator UsePowerup(Powerup powerup, Fruit fruit)
+    {
+        switch (powerup.powerupType)
+        {
+            case PowerupType.FireworkH:
+                yield return StartCoroutine(UseFirework(powerup, isHorizontal: true));
+                break;
+            case PowerupType.FireworkV:
+                yield return StartCoroutine(UseFirework(powerup, isHorizontal: false));
+                break;
+            case PowerupType.Bomb:
+                yield return StartCoroutine(UseBomb(powerup));
+                break;
+            case PowerupType.Multifruit:
+                yield return StartCoroutine(UseMultifruit(powerup, fruit));
+                break;
+            default:
+                break;
+        }
+    }
+    private IEnumerator UseFirework(Powerup firework, bool isHorizontal)
+    {
+        yield return StartCoroutine(UseFireworkCoroutine(firework, isHorizontal));
+    }
+    private IEnumerator UseBomb(Powerup Bomb)
+    {
+        yield break;
+    }
+    private IEnumerator UseMultifruit(Powerup Multifruit, Fruit fruit)
+    {
+        yield break;
+    }
+    //==================================================================================
+    private IEnumerator UseFireworkCoroutine(Powerup powerup, bool isHorizontal)
+    {
+        // Находим тайл, в котором находится этот фейерверк
+        Tile fireworkTile = powerup.GetComponentInParent<Tile>();
+
+        // Удаляем фейерверк с доски
+        fireworkTile.ClearItem();
+
+        // Создаем два фейерверка, которые летят в противоположные стороны
+        Quaternion angle1 = isHorizontal ? Quaternion.Euler(0, 0, 180)   : Quaternion.Euler(0, 0, -90);
+        Quaternion angle2 = isHorizontal ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(0, 0,  90);
+
+        GameObject firework1 = Instantiate(_flyingFireworkPrefab, GetWorldPosition(fireworkTile.X, fireworkTile.Y), angle1);
+        firework1.transform.localScale = Vector3.one * _itemSize;
+        GameObject firework2 = Instantiate(_flyingFireworkPrefab, GetWorldPosition(fireworkTile.X, fireworkTile.Y), angle2);
+        firework2.transform.localScale = Vector3.one * _itemSize;
+
+        // Направления движения
+        Vector3 dir1 = isHorizontal ? Vector3.right : Vector3.up;
+        Vector3 dir2 = isHorizontal ? Vector3.left : Vector3.down;
+
+        // Запускаем корутины движения фейерверков
+        StartCoroutine(MoveFirework(firework1, fireworkTile.X, fireworkTile.Y, dir1, isHorizontal));
+        StartCoroutine(MoveFirework(firework2, fireworkTile.X, fireworkTile.Y, dir2, isHorizontal));
+
+        // Ждем завершения анимации
+        yield return new WaitForSeconds(_fireworkDuration);
+
+        // Уничтожаем фейерверки
+        Destroy(firework1);
+        Destroy(firework2);
+
+    }
+    private IEnumerator MoveFirework(GameObject firework, int startX, int startY, Vector3 direction, bool isHorizontal)
+    {
+        float distance = 0f;
+        Vector3 startPos = GetWorldPosition(startX, startY);
+
+        while (distance < Mathf.Max(_width, _height))
+        {
+            if (firework.IsDestroyed()) break;
+            firework.transform.position = startPos + direction * distance;
+            distance += _fireworkSpeed * Time.deltaTime;
+
+            // Проверяем тайлы, через которые проходит фейерверк
+            CheckTilesUnderFirework(startX, startY, direction, distance, isHorizontal);
+
+            yield return null;
+        }
+    }
+    private void CheckTilesUnderFirework(int startX, int startY, Vector3 direction, float distance, bool isHorizontal)
+    {
+        // Определяем текущую позицию фейерверка
+        int currentX = startX + Mathf.RoundToInt(direction.x * distance);
+        int currentY = startY + Mathf.RoundToInt(direction.y * distance);
+
+        // Проверяем, находится ли позиция в пределах доски
+        if (currentX >= 0 && currentX < _width && currentY >= 0 && currentY < _height)
+        {
+            Tile tile = _tiles[currentX, currentY];
+            if (tile.Item != null)
+            {
+                // Уничтожаем предмет в тайле
+                tile.ClearItem();
+            }
+        }
+    }
+    //==================================================================================
+    private Vector3 GetWorldPosition(int x, int y)
+    {
+        return _tiles[x,y].transform.position;
     }
 }

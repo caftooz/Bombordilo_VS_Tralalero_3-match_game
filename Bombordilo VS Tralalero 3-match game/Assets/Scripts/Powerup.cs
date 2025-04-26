@@ -1,7 +1,7 @@
 using UnityEngine;
 
-public abstract class Powerup : Item
+public class Powerup : Item
 {
-    public abstract void Use();
-    public abstract int CombinationNum { get;}
+    public int CombinationNum;
+    public PowerupType powerupType;
 }

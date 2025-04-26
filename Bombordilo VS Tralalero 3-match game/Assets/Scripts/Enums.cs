@@ -8,3 +8,10 @@ public enum FruitType
     Watermelon,
     Pineapple
 }
+public enum PowerupType
+{
+    FireworkH,
+    FireworkV,
+    Bomb,
+    Multifruit
+}
