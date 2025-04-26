@@ -26,12 +26,28 @@ public class Board : MonoBehaviour
     [SerializeField] private Color _selectedColor = Color.gray;
     [SerializeField][Range(100, 200)] private int _mpSelectedSizePercent = 105;
 
-    [SerializeField] private float _fallSpeed = 5f;
-    
+    //[SerializeField] private float _fallSpeed = 5f;
+
+    [Header("Fall Animation Settings")]
+    [SerializeField] private float _baseFallSpeed = 5f;
+    [SerializeField] private float _bounceHeight = 0.3f;
+    [SerializeField] private float _bounceDurationRatio = 0.2f;
+    [SerializeField] private float _rotationAmount = 15f;
+    [SerializeField] private float _scalePulseAmount = 0.1f;
+    [SerializeField] private AnimationCurve _fallCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    [SerializeField]
+    private AnimationCurve _bounceCurve = new AnimationCurve(
+        new Keyframe(0, 0),
+        new Keyframe(0.5f, 1),
+        new Keyframe(1, 0)
+    );
+
     [Header("Swap Animation Settings")]
     [SerializeField] private float _swapDuration = 0.1f;
     [SerializeField] private float _swapOvershoot = 0.2f;
-    [SerializeField] private float _swapBounceDuration = 0.15f; 
+    [SerializeField] private float _swapBounceDuration = 0.15f;
+
+    private bool _isPlayingAnim;
 
     private Tile[,] _tiles;
     private List<Coroutine> _fallCoroutines = new List<Coroutine>();
@@ -229,6 +245,7 @@ public class Board : MonoBehaviour
 
     private IEnumerator ClearAndFillTiles()
     {
+        _isPlayingAnim = true;
         List<Tile[]> matches = FindMatches();
         bool condition = false;
         do
@@ -241,8 +258,9 @@ public class Board : MonoBehaviour
             matches = FindMatches();
             condition = matches.Count > 0;
         } while (condition);
-        
-        
+        _isPlayingAnim = false;
+
+
         void ManageMatches(List<Tile[]> matches)
         {
             foreach (var match in matches)
@@ -354,23 +372,89 @@ public class Board : MonoBehaviour
         }
         IEnumerator AnimateItemFall(Item item, Tile targetTile)
         {
-            Vector3 startPosition = item.transform.position;
+            Transform itemTransform = item.transform;
+            Vector3 startPosition = itemTransform.position;
             Vector3 endPosition = targetTile.transform.position;
+
+            // Рассчитываем длительность падения на основе расстояния
             float distance = Mathf.Abs(startPosition.y - endPosition.y);
-            float duration = distance / _fallSpeed;
+            float fallDuration = distance / _baseFallSpeed;
+
+            // Эффект "подпрыгивания" в конце
+            float bounceDuration = fallDuration * _bounceDurationRatio;
+            float totalDuration = fallDuration + bounceDuration;
+
+            // Начальные параметры для дополнительных эффектов
+            Quaternion startRotation = Quaternion.Euler(0, 0, Random.Range(-_rotationAmount, _rotationAmount));
+            Quaternion endRotation = Quaternion.identity;
+            Vector3 startScale = Vector3.one * (1f + _scalePulseAmount) * _itemSize;
+            Vector3 endScale = Vector3.one * _itemSize;
+
             float elapsedTime = 0f;
 
-            while (elapsedTime < duration)
+            while (elapsedTime < totalDuration)
             {
-                float t = elapsedTime / duration;
-                // Используем квадратичную easing-функцию для более естественного падения
-                t = Mathf.SmoothStep(0f, 1f, t);
-                item.transform.position = Vector3.Lerp(startPosition, endPosition, t);
+                float fallProgress = Mathf.Clamp01(elapsedTime / fallDuration);
+                float bounceProgress = Mathf.Clamp01((elapsedTime - fallDuration) / bounceDuration);
+
+                // Основное падение
+                float curveProgress = _fallCurve.Evaluate(fallProgress);
+                Vector3 fallPosition = Vector3.Lerp(startPosition, endPosition, curveProgress);
+
+                // Добавляем "подпрыгивание" в конце
+                if (bounceProgress > 0)
+                {
+                    float bounceHeight = _bounceCurve.Evaluate(bounceProgress) * _bounceHeight;
+                    fallPosition.y += bounceHeight;
+                }
+
+                // Дополнительные эффекты
+                float rotationProgress = _fallCurve.Evaluate(fallProgress);
+                float scaleProgress = 1f + (_scalePulseAmount * (1f - fallProgress));
+
+                // Применяем все трансформации
+                itemTransform.position = fallPosition;
+                itemTransform.rotation = Quaternion.Slerp(startRotation, endRotation, rotationProgress);
+                itemTransform.localScale = Vector3.one * scaleProgress * _itemSize;
+
                 elapsedTime += Time.deltaTime;
                 yield return null;
             }
 
-            item.transform.position = endPosition;
+            // Гарантируем точное попадание в конечную позицию
+            itemTransform.position = endPosition;
+            itemTransform.rotation = endRotation;
+            itemTransform.localScale = endScale;
+
+            // Небольшой эффект приземления
+            StartCoroutine(LandingEffect(item));
+        }
+        IEnumerator LandingEffect(Item item)
+        {
+            float effectDuration = 0.15f;
+            float elapsedTime = 0f;
+            Vector3 originalScale = item.transform.localScale;
+            Vector3 targetScale = originalScale * 1.1f;
+
+            while (elapsedTime < effectDuration)
+            {
+                float progress = elapsedTime / effectDuration;
+                progress = Mathf.SmoothStep(0f, 1f, progress);
+
+                if (progress < 0.5f)
+                {
+                    item.transform.localScale = Vector3.Lerp(originalScale, targetScale, progress * 2f);
+                }
+                else
+                {
+                    item.transform.localScale = Vector3.Lerp(targetScale, originalScale, (progress - 0.5f) * 2f);
+                }
+
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            item.transform.localScale = originalScale;
         }
         IEnumerator WaitForAllCoroutines()
         {
@@ -392,11 +476,10 @@ public class Board : MonoBehaviour
             return false;
         }
     }
-
     public IEnumerator ClickOnTile(Tile tile)
     {
 
-        if (tile.Item == null)
+        if (tile.Item == null || _isPlayingAnim)
         {
             yield break;
         }
@@ -423,7 +506,7 @@ public class Board : MonoBehaviour
                 }
                 else
                 {
-                    
+                    _isPlayingAnim = true;
                     _previousSelected.Deselect();
                     yield return StartCoroutine(SwapItemsWithAnimation(_previousSelected, tile));
 
@@ -431,6 +514,8 @@ public class Board : MonoBehaviour
                     {
                         yield return StartCoroutine(SwapItemsWithAnimation(_previousSelected, tile));
                         _previousSelected = null;
+
+                        _isPlayingAnim = false;
                     }
                     else
                     {
