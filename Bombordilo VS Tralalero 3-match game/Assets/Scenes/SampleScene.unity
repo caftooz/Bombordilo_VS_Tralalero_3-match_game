@@ -467,9 +467,19 @@ MonoBehaviour:
   _swapDuration: 0.1
   _swapOvershoot: 0.2
   _swapBounceDuration: 0.15
-  _fireworkSpeed: 10
-  _fireworkDuration: 1
+  _fireworkSpeed: 20
+  _fireworkDuration: 0.5
   _flyingFireworkPrefab: {fileID: 5635289800837907648, guid: ceb1b2d2d98cb664890360abcf436833, type: 3}
+  _explosionRadius: 2
+  _explosionDuration: 0.1
+  _explosionPrefab: {fileID: 7088574182141152668, guid: 95b52b5e9a65a4f43a25a55f88a1f7a7, type: 3}
+  _minExplosionScale: 1
+  _maxExplosionScale: 5
+  _multifruitActivationPrefab: {fileID: 8028262926692152860, guid: 4c56d4278f2811543af8210cb5356cec, type: 3}
+  _laserPrefab: {fileID: 1233984864541906474, guid: a8442992f55a0294cac285030fe635b3, type: 3}
+  _laserDuration: 0.3
+  _laserHitPrefab: {fileID: 9197889176975451013, guid: 70a39221965d9df4d91d7ff2f962620b, type: 3}
+  _laserFadeDuration: 0.2
 --- !u!1 &791809579
 GameObject:
   m_ObjectHideFlags: 0

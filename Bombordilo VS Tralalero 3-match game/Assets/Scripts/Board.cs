@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEngine.Rendering.DebugUI;
 
 public class Board : MonoBehaviour
 {
@@ -25,7 +24,7 @@ public class Board : MonoBehaviour
 
     private Tile _previousSelected;
     [SerializeField] private Color _selectedColor = Color.gray;
-    [SerializeField][Range(100, 200)] private int _mpSelectedSizePercent = 105;
+    [SerializeField, Range(100, 200)] private int _mpSelectedSizePercent = 105;
 
     //[SerializeField] private float _fallSpeed = 5f;
 
@@ -52,6 +51,20 @@ public class Board : MonoBehaviour
     [SerializeField] private float _fireworkSpeed = 10f;
     [SerializeField] private float _fireworkDuration = 0.5f;
     [SerializeField] private GameObject _flyingFireworkPrefab;
+
+    [Header("Bomb Settings")]
+    [SerializeField] private int _explosionRadius = 3;
+    [SerializeField] private float _explosionDuration = 0.5f;
+    [SerializeField] private GameObject _explosionPrefab;
+    [SerializeField] private float _minExplosionScale = 1f;
+    [SerializeField] private float _maxExplosionScale = 3f;
+
+    [Header("Multifruit Settings")]
+    [SerializeField] private GameObject _multifruitActivationPrefab;
+    [SerializeField] private GameObject _laserPrefab;
+    [SerializeField] private float _laserDuration = 0.3f;
+    [SerializeField] private GameObject _laserHitPrefab;
+    [SerializeField] private float _laserFadeDuration = 0.2f;
 
     private bool _isPlayingAnim;
 
@@ -87,7 +100,8 @@ public class Board : MonoBehaviour
                 {
                     foreach (Tile tile in match)
                     {
-                        tile.ClearItem();
+                        Destroy(tile.Item.gameObject);
+                        tile.Item = null;
                     }
                 }
             }
@@ -267,41 +281,6 @@ public class Board : MonoBehaviour
         _isPlayingAnim = false;
 
 
-        void ManageMatches(List<Tile[]> matches)
-        {
-            foreach (var match in matches)
-            {
-                int combinationNum = match.Length;
-                Tile firstTile = match[0];
-                firstTile.ClearItem();
-                foreach (var powerup in _powerupPrefabs)
-                {
-                    if (combinationNum == powerup.GetComponent<Powerup>().CombinationNum)
-                    {
-                        if (powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkV ||
-                            powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkH)
-                        {
-                            bool isHorizontal = isHorisontalMatch(match);
-                            if (powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkV && isHorizontal) continue;
-                            if (powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkH && !isHorizontal) continue;
-                        }
-                        firstTile.CreateItem(powerup.GetComponent<Item>());
-                    }
-                }
-
-                foreach (var tile in match)
-                {
-                    if (tile == firstTile) continue;
-                    tile.ClearItem();
-                }
-            }
-
-            bool isHorisontalMatch(Tile[] match)
-            {
-                if (match[0].Y - match[1].Y == 0) return true;
-                return false;
-            }
-        }
         IEnumerator FillBoard()
         {
             bool needsRefill = true;
@@ -404,8 +383,8 @@ public class Board : MonoBehaviour
             float totalDuration = fallDuration + bounceDuration;
 
             // Начальные параметры для дополнительных эффектов
-            Quaternion startRotation = Quaternion.Euler(0, 0, Random.Range(-_rotationAmount, _rotationAmount));
-            Quaternion endRotation = Quaternion.identity;
+            Quaternion startRotation = Quaternion.Euler(0, 0, Random.Range(-_rotationAmount, _rotationAmount) + itemTransform.localRotation.z);
+            Quaternion endRotation = itemTransform.localRotation;
             Vector3 startScale = Vector3.one * (1f + _scalePulseAmount) * _itemSize;
             Vector3 endScale = Vector3.one * _itemSize;
 
@@ -431,9 +410,11 @@ public class Board : MonoBehaviour
                 float rotationProgress = _fallCurve.Evaluate(fallProgress);
                 float scaleProgress = 1f + (_scalePulseAmount * (1f - fallProgress));
 
+                if (item == null) yield break;
+
                 // Применяем все трансформации
                 itemTransform.position = fallPosition;
-                itemTransform.rotation = Quaternion.Slerp(startRotation, endRotation, rotationProgress);
+                itemTransform.localRotation = Quaternion.Slerp(startRotation, endRotation, rotationProgress);
                 itemTransform.localScale = Vector3.one * scaleProgress * _itemSize;
 
                 elapsedTime += Time.deltaTime;
@@ -442,7 +423,7 @@ public class Board : MonoBehaviour
 
             // Гарантируем точное попадание в конечную позицию
             itemTransform.position = endPosition;
-            itemTransform.rotation = endRotation;
+            itemTransform.localRotation = endRotation;
             itemTransform.localScale = endScale;
 
             // Небольшой эффект приземления
@@ -496,6 +477,41 @@ public class Board : MonoBehaviour
             return false;
         }
     }
+    private void ManageMatches(List<Tile[]> matches)
+    {
+        foreach (var match in matches)
+        {
+            int combinationNum = match.Length;
+            Tile firstTile = match[0];
+            firstTile.ClearItem();
+            foreach (var powerup in _powerupPrefabs)
+            {
+                if (combinationNum == powerup.GetComponent<Powerup>().CombinationNum)
+                {
+                    if (powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkV ||
+                        powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkH)
+                    {
+                        bool isHorizontal = isHorisontalMatch(match);
+                        if (powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkV && isHorizontal) continue;
+                        if (powerup.GetComponent<Powerup>().powerupType == PowerupType.FireworkH && !isHorizontal) continue;
+                    }
+                    firstTile.CreateItem(powerup.GetComponent<Item>());
+                }
+            }
+
+            foreach (var tile in match)
+            {
+                if (tile == firstTile) continue;
+                tile.ClearItem();
+            }
+        }
+
+        bool isHorisontalMatch(Tile[] match)
+        {
+            if (match[0].Y - match[1].Y == 0) return true;
+            return false;
+        }
+    }
     public IEnumerator ClickOnTile(Tile tile)
     {
 
@@ -536,6 +552,9 @@ public class Board : MonoBehaviour
                     yield return StartCoroutine(SwapItemsWithAnimation(_previousSelected, tile));
                     if (_previousSelected.Item is Powerup || tile.Item is Powerup)
                     {
+                        List<Tile[]> matches = FindMatches();
+                        bool hasMatches = matches.Count > 0;
+                        if (hasMatches) ManageMatches(matches);
                         yield return StartCoroutine(UsePowerups(_previousSelected, tile));
                     }
 
@@ -645,6 +664,203 @@ public class Board : MonoBehaviour
         {
             Powerup powerup1 = (Powerup)tile1.Item;
             Powerup powerup2 = (Powerup)tile2.Item;
+
+            switch (powerup1.powerupType)
+            {
+                case PowerupType.FireworkH:
+                    switch (powerup2.powerupType)
+                    {
+                        case PowerupType.FireworkH:
+                        case PowerupType.FireworkV:
+                            yield return StartCoroutine(UseFireworkCoss(powerup1, powerup2));
+                            break;
+                        case PowerupType.Bomb:
+                            yield return StartCoroutine(UseFireworkTriple(powerup1, powerup2, true));
+                            break;
+                        case PowerupType.Multifruit:
+                            yield return StartCoroutine(UseMultifruitWithPowerup(powerup2, powerup1));
+                            break;
+                    }
+                    break;
+                case PowerupType.FireworkV:
+                    switch (powerup2.powerupType)
+                    {
+                        case PowerupType.FireworkH:
+                        case PowerupType.FireworkV:
+                            yield return StartCoroutine(UseFireworkCoss(powerup1, powerup2));
+                            break;
+                        case PowerupType.Bomb:
+                            yield return StartCoroutine(UseFireworkTriple(powerup1, powerup2, false));
+                            break;
+                        case PowerupType.Multifruit:
+                            yield return StartCoroutine(UseMultifruitWithPowerup(powerup2, powerup1));
+                            break;
+                    }
+                    break;
+                case PowerupType.Bomb:
+                    switch (powerup2.powerupType)
+                    {
+                        case PowerupType.FireworkH:
+                            yield return StartCoroutine(UseFireworkTriple(powerup2, powerup1, true));
+                            break;
+                        case PowerupType.FireworkV:
+                            yield return StartCoroutine(UseFireworkTriple(powerup2, powerup1, false));
+                            break;
+                        case PowerupType.Bomb:
+                            yield return StartCoroutine(UseSuperBomb(powerup1, powerup2));
+                            break;
+                        case PowerupType.Multifruit:
+                            yield return StartCoroutine(UseMultifruitWithPowerup(powerup2, powerup1));
+                            break;
+                    }
+                    break;
+                case PowerupType.Multifruit:
+                    switch (powerup2.powerupType)
+                    {
+                        case PowerupType.FireworkH:
+                        case PowerupType.FireworkV:
+                        case PowerupType.Bomb:
+                            yield return StartCoroutine(UseMultifruitWithPowerup(powerup1, powerup2));
+                            break;
+                        case PowerupType.Multifruit:
+                            UseMultifruitWithMultifruit(powerup1, powerup2);
+                            break;
+                    }
+                    break;
+            }
+            IEnumerator UseFireworkCoss(Powerup firework1, Powerup firework2)
+            {
+                Tile f1Tile = firework1.GetComponentInParent<Tile>();
+                Tile f2Tile = firework2.GetComponentInParent<Tile>();
+                f1Tile.ClearItem();
+                f2Tile.ClearItem();
+             
+                f1Tile.CreateItem(_powerupPrefabs.First(pu => pu.GetComponent<Powerup>().powerupType == PowerupType.FireworkH).GetComponent<Item>());
+                StartCoroutine(UseFirework(f1Tile.Item as Powerup, true));
+                yield return new WaitWhile(() => f1Tile.Item != null);
+                f1Tile.CreateItem(_powerupPrefabs.First(pu => pu.GetComponent<Powerup>().powerupType == PowerupType.FireworkV).GetComponent<Item>());
+                yield return StartCoroutine(UseFirework(f1Tile.Item as Powerup, false));
+            }
+            IEnumerator UseFireworkTriple(Powerup firework, Powerup bomb, bool isHorisontal)
+            {
+                Tile bombTile = bomb.GetComponentInParent<Tile>();
+                bombTile.ClearItem();
+
+                List<Coroutine> FierworkCoroutines = new List<Coroutine>();
+                Tile fireworkTile = firework.GetComponentInParent<Tile>();
+                FierworkCoroutines.Add(StartCoroutine(UseFirework(firework, isHorisontal)));
+                List<Tile> tiles = new List<Tile>();
+                if (isHorisontal)
+                {
+                    if (fireworkTile.Y < _height - 1)
+                        tiles.Add(_tiles[fireworkTile.X, fireworkTile.Y + 1]);
+                    if (fireworkTile.Y > 0)
+                        tiles.Add(_tiles[fireworkTile.X, fireworkTile.Y - 1]);
+                }
+                else
+                {
+                    if (fireworkTile.X < _width - 1)
+                        tiles.Add(_tiles[fireworkTile.X + 1, fireworkTile.Y]);
+                    if (fireworkTile.X > 0)
+                        tiles.Add(_tiles[fireworkTile.X - 1, fireworkTile.Y]);
+                }
+
+                foreach (var tile in tiles)
+                {
+                    tile.ClearItem();
+                    if (isHorisontal)
+                    {
+                        tile.CreateItem(_powerupPrefabs.First(pu => pu.GetComponent<Powerup>().powerupType == PowerupType.FireworkH).GetComponent<Item>());
+                        FierworkCoroutines.Add(StartCoroutine(UseFirework(tile.Item as Powerup, isHorisontal)));
+                    }
+                    else
+                    {
+                        tile.CreateItem(_powerupPrefabs.First(pu => pu.GetComponent<Powerup>().powerupType == PowerupType.FireworkV).GetComponent<Item>());
+                        FierworkCoroutines.Add(StartCoroutine(UseFirework(tile.Item as Powerup, isHorisontal)));
+                    }
+                }
+
+                yield return WaitCor(FierworkCoroutines);
+
+                IEnumerator WaitCor(List<Coroutine> coroutines)
+                {
+                    foreach (var coroutine in coroutines)
+                    {
+                        yield return coroutine;
+                    }
+                }
+
+            }
+            IEnumerator UseSuperBomb(Powerup bomb1, Powerup bomb2)
+            {
+                Tile bomb2Tile = bomb2.GetComponentInParent<Tile>();
+                Destroy(bomb2Tile.Item.gameObject);
+                bomb2Tile.Item = null;
+                yield return StartCoroutine(UseBomb(bomb1, _explosionRadius + 1));
+            }
+            IEnumerator UseMultifruitWithPowerup(Powerup multifruit, Powerup powerup)
+            {
+                Tile multifruitTile = multifruit.GetComponentInParent<Tile>();
+
+                Vector3 startPosition = GetWorldPosition(multifruitTile.X, multifruitTile.Y);
+
+                multifruitTile.ClearItem();
+                powerup.GetComponentInParent<Tile>().ClearItem();
+
+                GameObject activationEffect = Instantiate(_multifruitActivationPrefab, startPosition, Quaternion.identity);
+                yield return new WaitForSeconds(0.3f); // Ждем начало анимации
+
+                List<GameObject> lasers = new List<GameObject>();
+
+                List<Coroutine> usePowerupCoroutins = new List<Coroutine>();
+                var tilesFruit = (from Tile tile in _tiles where (tile.Item is Fruit) select tile).ToList<Tile>();
+
+                List<Tile> tilsToDestroy = new List<Tile>();
+                for (int i = 0; i < 5; i++)
+                {
+                    int random = Random.Range(0, tilesFruit.Count());
+
+                    GameObject laser = CreateLaser(startPosition, GetWorldPosition(tilesFruit[random].X, tilesFruit[random].Y));
+                    lasers.Add(laser);
+
+                    tilsToDestroy.Add(tilesFruit[random]);
+
+                    tilesFruit.Remove(tilesFruit[random]);
+                }
+
+                yield return new WaitForSeconds(0.5f);
+
+                foreach (var tile in tilsToDestroy)
+                {
+                    tile.ClearItem();
+                    tile.CreateItem(_powerupPrefabs.First(pr => pr.GetComponent<Powerup>().powerupType == powerup.powerupType).GetComponent<Item>());
+                    usePowerupCoroutins.Add(StartCoroutine(UsePowerup(tile.Item.GetComponent<Powerup>(), null)));
+                }
+
+                foreach (var coroutine in usePowerupCoroutins)
+                {
+                    yield return coroutine;
+                }
+
+                foreach (GameObject laser in lasers)
+                {
+                    StartCoroutine(FadeOutAndDestroyLaser(laser));
+                }
+
+                Destroy(activationEffect);
+            }
+            void UseMultifruitWithMultifruit(Powerup multifruit, Powerup powerup)
+            {
+                multifruit.GetComponentInParent<Tile>().ClearItem();
+                powerup.GetComponentInParent<Tile>().ClearItem();
+                foreach (var tile in _tiles)
+                {
+                    if (tile.Item is Powerup powerupT && powerupT.powerupType == PowerupType.FireworkH) StartCoroutine(UseFirework(powerupT, true));
+                    else
+                        tile.ClearItem();
+                }
+            }
+
         } 
         else if (tile1.Item is Powerup && tile2.Item is not Powerup)
         {
@@ -672,7 +888,7 @@ public class Board : MonoBehaviour
                 yield return StartCoroutine(UseFirework(powerup, isHorizontal: false));
                 break;
             case PowerupType.Bomb:
-                yield return StartCoroutine(UseBomb(powerup));
+                yield return StartCoroutine(UseBomb(powerup, _explosionRadius));
                 break;
             case PowerupType.Multifruit:
                 yield return StartCoroutine(UseMultifruit(powerup, fruit));
@@ -681,19 +897,11 @@ public class Board : MonoBehaviour
                 break;
         }
     }
+    //==================================================================================
     private IEnumerator UseFirework(Powerup firework, bool isHorizontal)
     {
         yield return StartCoroutine(UseFireworkCoroutine(firework, isHorizontal));
     }
-    private IEnumerator UseBomb(Powerup Bomb)
-    {
-        yield break;
-    }
-    private IEnumerator UseMultifruit(Powerup Multifruit, Fruit fruit)
-    {
-        yield break;
-    }
-    //==================================================================================
     private IEnumerator UseFireworkCoroutine(Powerup powerup, bool isHorizontal)
     {
         // Находим тайл, в котором находится этот фейерверк
@@ -756,8 +964,12 @@ public class Board : MonoBehaviour
             Tile tile = _tiles[currentX, currentY];
             if (tile.Item != null)
             {
-                // Уничтожаем предмет в тайле
-                tile.ClearItem();
+                if (tile.Item is Powerup p)
+                {
+                    StartCoroutine(UsePowerup(p, null));
+                }
+                else
+                    tile.ClearItem();
             }
         }
     }
@@ -765,5 +977,254 @@ public class Board : MonoBehaviour
     private Vector3 GetWorldPosition(int x, int y)
     {
         return _tiles[x,y].transform.position;
+    }
+    //==================================================================================
+    private IEnumerator UseBomb(Powerup bomb, int explosionRadius)
+    {
+        // Находим тайл с бомбой
+        Tile bombTile = bomb.GetComponentInParent<Tile>();
+        if (bombTile == null) yield break;
+
+        int bombX = bombTile.X;
+        int bombY = bombTile.Y;
+
+        // Удаляем бомбу с доски
+        bombTile.ClearItem();
+
+        // Создаем эффект взрыва
+        GameObject explosion = Instantiate(_explosionPrefab, GetWorldPosition(bombX, bombY), Quaternion.identity);
+
+        // Получаем все тайлы в радиусе взрыва
+        List<Tile> affectedTiles = GetTilesInRadius(bombX, bombY, explosionRadius);
+
+        // Анимация взрыва (можно добавить масштабирование или эффект волны)
+        float timer = 0f;
+        while (timer < _explosionDuration)
+        {
+            float scale = Mathf.Lerp(_minExplosionScale, _maxExplosionScale, timer / _explosionDuration);
+            explosion.transform.localScale = Vector3.one * scale;
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        // Уничтожаем предметы в пораженных тайлах
+        foreach (Tile tile in affectedTiles)
+        {
+
+            if (tile.Item != null)
+            {
+                if (tile.Item is Powerup p)
+                {
+                    StartCoroutine(UsePowerup(p, null));
+                }
+                else
+                    tile.ClearItem();
+            }
+        }
+
+        // Уничтожаем эффект взрыва
+        Destroy(explosion);
+
+    }
+    private List<Tile> GetTilesInRadius(int centerX, int centerY, int radius)
+    {
+        List<Tile> result = new List<Tile>();
+
+        for (int x = centerX - radius; x <= centerX + radius; x++)
+        {
+            for (int y = centerY - radius; y <= centerY + radius; y++)
+            {
+                // Проверяем, находится ли тайл в пределах доски
+                if (x >= 0 && x < _width && y >= 0 && y < _height)
+                {
+                    // Для кругового радиуса можно добавить проверку расстояния:
+                    float distance = Mathf.Sqrt(Mathf.Pow(x - centerX, 2) + Mathf.Pow(y - centerY, 2));
+                    if (distance <= radius)
+                        result.Add(_tiles[x, y]);
+                }
+            }
+        }
+
+        return result;
+    }
+    //==================================================================================
+    private IEnumerator UseMultifruit(Powerup multifruit, Fruit targetFruit)
+    {
+        // Находим тайл с мультифруктом
+        Tile multifruitTile = multifruit.GetComponentInParent<Tile>();
+
+        Vector3 startPosition = GetWorldPosition(multifruitTile.X, multifruitTile.Y);
+
+        // Удаляем мультифрукт с доски
+        multifruitTile.ClearItem();
+
+        // Определяем какие фрукты будем уничтожать
+        List<Fruit> fruitsToDestroy = new List<Fruit>();
+        FruitType targetType;
+
+        if (targetFruit != null)
+        {
+            targetType = targetFruit.fruitType;
+            fruitsToDestroy = GetAllFruitsOfType(targetType);
+        }
+        else
+        {
+            // Режим 2: уничтожаем случайные 1/5 всех фруктов
+            int fruitsCount = CountAllFruits();
+            int fruitsToDestroyCount = Mathf.Max(1, fruitsCount / 5);
+            fruitsToDestroy = GetRandomFruits(fruitsToDestroyCount);
+        }
+
+        // Создаем эффект активации в центре
+        GameObject activationEffect = Instantiate(_multifruitActivationPrefab, startPosition, Quaternion.identity);
+        yield return new WaitForSeconds(0.3f); // Ждем начало анимации
+
+        // Запускаем лучи ко всем целям
+        List<GameObject> lasers = new List<GameObject>();
+        foreach (Fruit fruit in fruitsToDestroy)
+        {
+            Tile fruitTile = fruit.GetComponentInParent<Tile>();
+            if (fruitTile != null)
+            {
+                GameObject laser = CreateLaser(startPosition, GetWorldPosition(fruitTile.X, fruitTile.Y));
+                lasers.Add(laser);
+            }
+        }
+
+        // Ждем пока лучи достигнут целей
+        yield return new WaitForSeconds(0.5f);
+
+        // Уничтожаем все целевые фрукты
+        foreach (Fruit fruit in fruitsToDestroy)
+        {
+            Tile fruitTile = fruit.GetComponentInParent<Tile>();
+            if (fruitTile != null && fruitTile.Item != null)
+            {
+                fruitTile.ClearItem();
+            }
+        }
+
+        // Уничтожаем лучи с эффектом
+        foreach (GameObject laser in lasers)
+        {
+            StartCoroutine(FadeOutAndDestroyLaser(laser));
+        }
+
+        // Уничтожаем эффект активации
+        Destroy(activationEffect);
+    }
+    private GameObject CreateLaser(Vector3 startPos, Vector3 endPos)
+    {
+        GameObject laser = Instantiate(_laserPrefab, startPos, Quaternion.identity);
+        LineRenderer lr = laser.GetComponent<LineRenderer>();
+
+        // Настраиваем луч
+        lr.SetPosition(0, startPos);
+        lr.SetPosition(1, startPos); // Начинаем с точки
+
+        // Анимация "выстрела" луча
+        StartCoroutine(AnimateLaser(lr, startPos, endPos));
+
+        return laser;
+    }
+    private IEnumerator AnimateLaser(LineRenderer lr, Vector3 startPos, Vector3 endPos)
+    {
+        float duration = _laserDuration; //0.3f
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            float progress = Mathf.Clamp01(timer / duration);
+            Vector3 currentEnd = Vector3.Lerp(startPos, endPos, progress);
+            lr.SetPosition(1, currentEnd);
+            yield return null;
+        }
+
+        // Эффект попадания
+        Destroy(Instantiate(_laserHitPrefab, endPos, Quaternion.identity), 2);
+    }
+    private IEnumerator FadeOutAndDestroyLaser(GameObject laser)
+    {
+        LineRenderer lr = laser.GetComponent<LineRenderer>();
+        Color startColor = lr.startColor;
+        Color endColor = lr.endColor;
+
+        float fadeDuration = _laserFadeDuration;//0.2f
+        float timer = 0f;
+
+        while (timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+            float alpha = Mathf.Lerp(1f, 0f, timer / fadeDuration);
+            lr.startColor = new Color(startColor.r, startColor.g, startColor.b, alpha);
+            lr.endColor = new Color(endColor.r, endColor.g, endColor.b, alpha);
+            yield return null;
+        }
+
+        Destroy(laser);
+    }
+    private List<Fruit> GetAllFruitsOfType(FruitType type)
+    {
+        List<Fruit> result = new List<Fruit>();
+
+        for (int x = 0; x < _width; x++)
+        {
+            for (int y = 0; y < _height; y++)
+            {
+                if (_tiles[x, y].Item != null)
+                if (_tiles[x, y].Item is Fruit fruit && fruit.fruitType == type)
+                {
+                    result.Add(fruit);
+                }
+            }
+        }
+
+        return result;
+    }
+    private List<Fruit> GetRandomFruits(int count)
+    {
+        List<Fruit> allFruits = new List<Fruit>();
+        List<Fruit> result = new List<Fruit>();
+
+        // Собираем все фрукты
+        for (int x = 0; x < _width; x++)
+        {
+            for (int y = 0; y < _height; y++)
+            {
+                if (_tiles[x, y].Item != null)
+                if (_tiles[x, y].Item is Fruit fruit)
+                {
+                    allFruits.Add(fruit);
+                }
+            }
+        }
+
+        // Выбираем случайные
+        for (int i = 0; i < count && allFruits.Count > 0; i++)
+        {
+            int randomIndex = Random.Range(0, allFruits.Count);
+            result.Add(allFruits[randomIndex]);
+            allFruits.RemoveAt(randomIndex);
+        }
+
+        return result;
+    }
+    private int CountAllFruits()
+    {
+        int count = 0;
+
+        for (int x = 0; x < _width; x++)
+        {
+            for (int y = 0; y < _height; y++)
+            {
+                if (_tiles[x, y].Item is Fruit)
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
     }
 }
