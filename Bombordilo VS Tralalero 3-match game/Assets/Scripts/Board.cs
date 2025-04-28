@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
@@ -26,8 +27,6 @@ public class Board : MonoBehaviour
     [SerializeField] private Color _selectedColor = Color.gray;
     [SerializeField, Range(100, 200)] private int _mpSelectedSizePercent = 105;
 
-    //[SerializeField] private float _fallSpeed = 5f;
-
     [Header("Fall Animation Settings")]
     [SerializeField] private float _baseFallSpeed = 5f;
     [SerializeField] private float _bounceHeight = 0.3f;
@@ -46,6 +45,12 @@ public class Board : MonoBehaviour
     [SerializeField] private float _swapDuration = 0.1f;
     [SerializeField] private float _swapOvershoot = 0.2f;
     [SerializeField] private float _swapBounceDuration = 0.15f;
+
+    [Header("Burst Animation Settings")]
+    [SerializeField] private float _burstMaxScale = 2f;
+    [SerializeField] private float _burstDuration = 0.2f;
+    [SerializeField] private AnimationCurve _burstScaleCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    [SerializeField] private GameObject _burstItemPrefab;
 
     [Header("Firework Settings")]
     [SerializeField] private float _fireworkSpeed = 10f;
@@ -68,6 +73,10 @@ public class Board : MonoBehaviour
 
     private bool _isPlayingAnim;
 
+    public event Action DoStep;
+    public event Action<FruitType> DamageBoss;
+    public event Action DamageBossFirework;
+
     private Tile[,] _tiles;
     private List<Coroutine> _fallCoroutines = new List<Coroutine>();
 
@@ -85,7 +94,7 @@ public class Board : MonoBehaviour
             {
                 if (tile.Item == null)
                 {
-                    int random = Random.Range(0, _fruitPrefabs.Length);
+                    int random = UnityEngine.Random.Range(0, _fruitPrefabs.Length);
 
                     tile.CreateItem(_fruitPrefabs[random].GetComponent<Item>());
                 }
@@ -115,7 +124,7 @@ public class Board : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 tiles[x, y] = Instantiate(_tilePrefab, transform).GetComponent<Tile>();
-                tiles[x, y].SetTileProp(x, y, _itemSize);
+                tiles[x, y].SetTileProp(x, y, _itemSize, _burstMaxScale, _burstDuration, _burstScaleCurve, _burstItemPrefab, DamageBoss);
                 tiles[x, y].transform.localScale = Vector3.one * _tileSize;
                 tiles[x, y].transform.localPosition = new Vector3(x * (_tileSize), y * (_tileSize), 1);
                 tiles[x, y].gameObject.name = $"Tile[{x},{y}]";
@@ -125,6 +134,7 @@ public class Board : MonoBehaviour
     }
     private void ClearBoard()
     {
+        _isPlayingAnim = false;
         if (_tiles == null) return;
 
         int width = _tiles.GetLength(0);
@@ -346,7 +356,7 @@ public class Board : MonoBehaviour
                         );
 
                         GameObject newFruit = Instantiate(
-                            _fruitPrefabs[Random.Range(0, _fruitPrefabs.Length)],
+                            _fruitPrefabs[UnityEngine.Random.Range(0, _fruitPrefabs.Length)],
                             spawnPosition,
                             Quaternion.identity
                         );
@@ -383,7 +393,7 @@ public class Board : MonoBehaviour
             float totalDuration = fallDuration + bounceDuration;
 
             // Начальные параметры для дополнительных эффектов
-            Quaternion startRotation = Quaternion.Euler(0, 0, Random.Range(-_rotationAmount, _rotationAmount) + itemTransform.localRotation.z);
+            Quaternion startRotation = Quaternion.Euler(0, 0, UnityEngine.Random.Range(-_rotationAmount, _rotationAmount) + itemTransform.localRotation.z);
             Quaternion endRotation = itemTransform.localRotation;
             Vector3 startScale = Vector3.one * (1f + _scalePulseAmount) * _itemSize;
             Vector3 endScale = Vector3.one * _itemSize;
@@ -484,7 +494,17 @@ public class Board : MonoBehaviour
             int combinationNum = match.Length;
             Tile firstTile = match[0];
             firstTile.ClearItem();
-            foreach (var powerup in _powerupPrefabs)
+            if (combinationNum > 6)
+            {
+                foreach (var powerup1 in _powerupPrefabs)
+                {
+                    if (powerup1.GetComponent<Powerup>().CombinationNum == 6)
+                    {
+                        firstTile.CreateItem(powerup1.GetComponent<Item>());
+                    }
+                }
+            }
+            else foreach (var powerup in _powerupPrefabs)
             {
                 if (combinationNum == powerup.GetComponent<Powerup>().CombinationNum)
                 {
@@ -528,6 +548,7 @@ public class Board : MonoBehaviour
             {
                 yield return StartCoroutine(UsePowerup(powerup, null));
                 yield return StartCoroutine(ClearAndFillTiles());
+                DoStep?.Invoke();
             }
         }
         else
@@ -554,7 +575,10 @@ public class Board : MonoBehaviour
                     {
                         List<Tile[]> matches = FindMatches();
                         bool hasMatches = matches.Count > 0;
-                        if (hasMatches) ManageMatches(matches);
+                        if ((_previousSelected.Item is not Powerup powerup1 || powerup1.powerupType != PowerupType.Multifruit) && 
+                            (tile.Item is not Powerup powerup2 || powerup2.powerupType != PowerupType.Multifruit))
+                            if (hasMatches) ManageMatches(matches);
+                                
                         yield return StartCoroutine(UsePowerups(_previousSelected, tile));
                     }
 
@@ -569,6 +593,7 @@ public class Board : MonoBehaviour
                     {
                         _previousSelected = null;
                         yield return StartCoroutine(ClearAndFillTiles());
+                        DoStep?.Invoke();
                     }
 
                 }
@@ -818,7 +843,7 @@ public class Board : MonoBehaviour
                 List<Tile> tilsToDestroy = new List<Tile>();
                 for (int i = 0; i < 5; i++)
                 {
-                    int random = Random.Range(0, tilesFruit.Count());
+                    int random = UnityEngine.Random.Range(0, tilesFruit.Count());
 
                     GameObject laser = CreateLaser(startPosition, GetWorldPosition(tilesFruit[random].X, tilesFruit[random].Y));
                     lasers.Add(laser);
@@ -951,6 +976,7 @@ public class Board : MonoBehaviour
 
             yield return null;
         }
+        if (isHorizontal) DamageBossFirework?.Invoke();
     }
     private void CheckTilesUnderFirework(int startX, int startY, Vector3 direction, float distance, bool isHorizontal)
     {
@@ -1203,7 +1229,7 @@ public class Board : MonoBehaviour
         // Выбираем случайные
         for (int i = 0; i < count && allFruits.Count > 0; i++)
         {
-            int randomIndex = Random.Range(0, allFruits.Count);
+            int randomIndex = UnityEngine.Random.Range(0, allFruits.Count);
             result.Add(allFruits[randomIndex]);
             allFruits.RemoveAt(randomIndex);
         }

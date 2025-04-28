@@ -1,16 +1,26 @@
-using Unity.VisualScripting;
+using System.Collections;
 using UnityEngine;
-using UnityEngine.VFX;
+using System;
 using static UnityEditor.Progress;
 
 public class Tile : MonoBehaviour
 {
-    public void SetTileProp(int x, int y, float itemSize)
+    private float _burstMaxScale = 2f;
+    private float _burstDuration = 0.2f;
+    private AnimationCurve _burstScaleCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    private GameObject _burstItemPrefab;
+    private event Action<FruitType> _damageBoss;
+    public void SetTileProp(int x, int y, float itemSize, float burstMaxScale, float burstDuration, AnimationCurve burstScaleCurve, GameObject burstItemPrefab, Action<FruitType> damageBoss)
     {
         X = x;
         Y = y;
 
         _itemSize = itemSize;
+        _burstMaxScale = burstMaxScale;
+        _burstDuration = burstDuration;
+        _burstScaleCurve = burstScaleCurve;
+        _burstItemPrefab = burstItemPrefab;
+        _damageBoss = damageBoss;
     }
 
     public bool IsSelected { get; private set; } = false;
@@ -32,7 +42,45 @@ public class Tile : MonoBehaviour
     }
     public void ClearItem()
     {
-        if (Item != null) { Destroy(Item.gameObject); Item = null; }
+        if (Item != null)
+        {
+            StartCoroutine(burstItemCoroutine(Item));
+
+            Item = null;
+        }
+    }
+
+    private IEnumerator burstItemCoroutine(Item item)
+    {
+
+        Transform itemTransform = item.transform;
+
+        Vector3 startScale = itemTransform.localScale;
+        Vector3 endScale   = itemTransform.localScale * _burstMaxScale;
+
+        float timer = 0f;
+        while (timer < _burstDuration)
+        {
+            float burstProgress = Mathf.Clamp01(timer / _burstDuration);
+
+            float curveProgress = _burstScaleCurve.Evaluate(burstProgress);
+            Vector3 burstScale = Vector3.Lerp(startScale, endScale, curveProgress);
+
+            itemTransform.localScale = burstScale;
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        if (_burstItemPrefab != null)
+        {
+            GameObject burstItemEffect = Instantiate(_burstItemPrefab);
+            burstItemEffect.transform.position = item.transform.transform.position;
+            Destroy(burstItemEffect, 5);
+        }
+
+        if (item is Fruit fruit) _damageBoss?.Invoke(fruit.fruitType);
+
+        Destroy(item.gameObject);
     }
 
     public void Select(Color selectedColor, int mpSelectedSizePercent)
