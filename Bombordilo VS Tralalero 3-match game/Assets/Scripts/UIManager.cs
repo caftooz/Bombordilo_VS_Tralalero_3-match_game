@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +10,10 @@ public class UIManager : MonoBehaviour
     [SerializeField] private SpriteRenderer _background;
 
     [SerializeField] private Slider _stepSlider;
+
+    [SerializeField] private GameObject _panelWin;
+    [SerializeField] private GameObject _panelOver;
+    [SerializeField] private GameObject _panelMap;
 
     public event Action OnBossDeth;
     public event Action OnStepEnd;
@@ -28,7 +31,7 @@ public class UIManager : MonoBehaviour
     }
     public void SpendStep()
     {
-        if (_stepSlider.value > 1)
+        if (_stepSlider.value > 2)
         {
             _stepSlider.value--;
         }
@@ -36,6 +39,27 @@ public class UIManager : MonoBehaviour
         {
             OnStepEnd?.Invoke();
         }
+    }
+
+    public void GameWin()
+    {
+        _panelWin.SetActive(true);
+    }
+    public void GameOver()
+    {
+        _panelOver.SetActive(true);
+    }
+
+    public void DeactivatePanels()
+    {
+        _panelOver.SetActive(false);
+        _panelWin.SetActive(false);
+        _panelMap.SetActive(false);
+    }
+    public void OpenMap()
+    {
+        DeactivatePanels();
+        _panelMap.SetActive(true);
     }
 
     public void SpendBossHP(int damage)

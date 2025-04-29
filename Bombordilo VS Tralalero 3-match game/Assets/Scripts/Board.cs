@@ -1109,6 +1109,7 @@ public class Board : MonoBehaviour
         List<GameObject> lasers = new List<GameObject>();
         foreach (Fruit fruit in fruitsToDestroy)
         {
+            if (fruit == null) continue;
             Tile fruitTile = fruit.GetComponentInParent<Tile>();
             if (fruitTile != null)
             {
@@ -1123,6 +1124,7 @@ public class Board : MonoBehaviour
         // Уничтожаем все целевые фрукты
         foreach (Fruit fruit in fruitsToDestroy)
         {
+            if (fruit == null) continue;
             Tile fruitTile = fruit.GetComponentInParent<Tile>();
             if (fruitTile != null && fruitTile.Item != null)
             {

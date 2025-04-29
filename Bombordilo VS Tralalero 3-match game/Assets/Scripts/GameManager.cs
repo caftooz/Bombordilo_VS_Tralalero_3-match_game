@@ -25,8 +25,6 @@ public class GameManager : MonoBehaviour
 
         _UIManager.OnBossDeth += BossDeth;
         _UIManager.OnStepEnd += GameOver;
-
-        SetLevel(_currentLevelNumber);
     }
 
     private void DamageBoss(FruitType fruitType)
@@ -62,6 +60,7 @@ public class GameManager : MonoBehaviour
 
         _currentBossPhase = 1;
 
+        _UIManager.DeactivatePanels();
         _UIManager.SetBackground(_currentLevel.Background);
         _UIManager.ResetStepSlider();
         _UIManager.SetBoss(
@@ -89,13 +88,13 @@ public class GameManager : MonoBehaviour
     }
     private void GameOver()
     {
-        ResetLevel();
+        _UIManager.GameOver();
     }
     private void GameWin()
     {
-        NextLevel();
+        _UIManager.GameWin();
     }
-    private void NextLevel()
+    public void NextLevel()
     {
         if (_currentLevelNumber == _levels.Max(level => level.LevelNumber))
         {
@@ -106,7 +105,7 @@ public class GameManager : MonoBehaviour
             SetLevel(_currentLevelNumber + 1);
         }
     }
-    private void ResetLevel()
+    public void ResetLevel()
     {
         SetLevel(_currentLevelNumber);
     }
