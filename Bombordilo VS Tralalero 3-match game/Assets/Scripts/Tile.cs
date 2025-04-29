@@ -1,7 +1,6 @@
 using System.Collections;
 using UnityEngine;
 using System;
-using static UnityEditor.Progress;
 
 public class Tile : MonoBehaviour
 {
@@ -10,7 +9,12 @@ public class Tile : MonoBehaviour
     private AnimationCurve _burstScaleCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
     private GameObject _burstItemPrefab;
     private event Action<FruitType> _damageBoss;
-    public void SetTileProp(int x, int y, float itemSize, float burstMaxScale, float burstDuration, AnimationCurve burstScaleCurve, GameObject burstItemPrefab, Action<FruitType> damageBoss)
+    private event Action<int> _addPoints;
+
+
+    private float _moveToBossDuration = 0.2f;
+    private AnimationCurve _moveToBossCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    public void SetTileProp(int x, int y, float itemSize, float burstMaxScale, float burstDuration, AnimationCurve burstScaleCurve, GameObject burstItemPrefab, Action<FruitType> damageBoss, Action<int> addPoints, float moveToBossDuration, AnimationCurve moveToBossCurve)
     {
         X = x;
         Y = y;
@@ -21,6 +25,9 @@ public class Tile : MonoBehaviour
         _burstScaleCurve = burstScaleCurve;
         _burstItemPrefab = burstItemPrefab;
         _damageBoss = damageBoss;
+        _addPoints = addPoints;
+        _moveToBossCurve = moveToBossCurve;
+        _moveToBossDuration = moveToBossDuration;
     }
 
     public bool IsSelected { get; private set; } = false;
@@ -44,7 +51,15 @@ public class Tile : MonoBehaviour
     {
         if (Item != null)
         {
-            StartCoroutine(burstItemCoroutine(Item));
+            if (Item is Fruit fruit)
+            {
+                _addPoints?.Invoke(10);
+                StartCoroutine(MoveToBoss(Item));
+            }
+            else
+            {
+                Destroy(Item.gameObject);
+            }
 
             Item = null;
         }
@@ -71,6 +86,36 @@ public class Tile : MonoBehaviour
             yield return null;
         }
 
+    }
+
+    private IEnumerator MoveToBoss(Item item)
+    {
+        yield return StartCoroutine(burstItemCoroutine(item));
+
+        Transform itemTransform = item.transform;
+        Vector3 bossPosition = GameObject.FindGameObjectWithTag("Boss").transform.position;
+
+        int randomx = UnityEngine.Random.Range(-2,1);
+        int randomy = UnityEngine.Random.Range(-2, 2);
+
+        Vector3 startPosition = itemTransform.position;
+        Vector3 endPosotion = bossPosition + Vector3.up * randomy + Vector3.right * randomx;
+
+        float timer = 0f;
+
+        while (timer < _moveToBossDuration)
+        {
+            float moveToBossProgress = Mathf.Clamp01(timer / _moveToBossDuration);
+
+            float curveProgress = _moveToBossCurve.Evaluate(moveToBossProgress);
+            Vector3 moveToBossPosition = Vector3.Lerp(startPosition, endPosotion, curveProgress);
+
+            itemTransform.position = moveToBossPosition;
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+
         if (_burstItemPrefab != null)
         {
             GameObject burstItemEffect = Instantiate(_burstItemPrefab);
@@ -78,7 +123,10 @@ public class Tile : MonoBehaviour
             Destroy(burstItemEffect, 5);
         }
 
-        if (item is Fruit fruit) _damageBoss?.Invoke(fruit.fruitType);
+        if (item is Fruit fruit)
+        {
+            _damageBoss?.Invoke(fruit.fruitType);
+        }
 
         Destroy(item.gameObject);
     }

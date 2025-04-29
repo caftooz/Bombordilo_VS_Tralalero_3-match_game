@@ -17,16 +17,32 @@ public class GameManager : MonoBehaviour
     private Level _currentLevel;
     private Boss _currentBoss;
     private int _currentBossPhase = 1;
+
+    private int _currentPoints;
+    private GameState gameState;
+
+    private enum GameState
+    {
+        GameWin,
+        GameOver,
+        GamePlaying
+    }
     void Start()
     {
         _board.DoStep += _UIManager.SpendStep;
         _board.DamageBoss += DamageBoss;
         _board.DamageBossFirework += DamageBossFirework;
+        _board.AddPoints += AddPoints;
 
         _UIManager.OnBossDeth += BossDeth;
         _UIManager.OnStepEnd += GameOver;
     }
 
+    private void AddPoints(int points)
+    {
+        _currentPoints += points;
+        _UIManager.SetPoints(_currentPoints);
+    }
     private void DamageBoss(FruitType fruitType)
     {
         if (_currentBoss is StandartBoss standartBoss && standartBoss.BossCriticalFruit == fruitType)
@@ -59,7 +75,9 @@ public class GameManager : MonoBehaviour
         _currentBoss = _currentLevel.Boss;
 
         _currentBossPhase = 1;
+        _currentPoints = 0;
 
+        _UIManager.SetPoints(_currentPoints);
         _UIManager.DeactivatePanels();
         _UIManager.SetBackground(_currentLevel.Background);
         _UIManager.ResetStepSlider();
@@ -68,6 +86,8 @@ public class GameManager : MonoBehaviour
             bossMaxHP:  _currentBoss.BossHp,
             bossSprite: _currentBoss.BossSprite
         );
+
+        gameState = GameState.GamePlaying;
     }
     private void BossDeth()
     {
@@ -88,11 +108,23 @@ public class GameManager : MonoBehaviour
     }
     private void GameOver()
     {
-        _UIManager.GameOver();
+        if (gameState == GameState.GamePlaying)
+        {
+            gameState = GameState.GameOver;
+            _UIManager.GameOver();
+        }
     }
     private void GameWin()
     {
-        _UIManager.GameWin();
+        if (gameState == GameState.GamePlaying)
+        {
+            gameState = GameState.GameWin;
+            _UIManager.GameWin();
+
+            _UIManager.AvtivateStars(1);
+            if (_currentPoints >= _currentLevel.PointsOnSilver) _UIManager.AvtivateStars(2);
+            if (_currentPoints >= _currentLevel.PointsOnGold) _UIManager.AvtivateStars(3);
+        }
     }
     public void NextLevel()
     {

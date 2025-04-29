@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Barbaloni Luliloni
   m_EditorClassIdentifier: 
   BossName: Barbaloni Luliloni
-  BossHp: 150
+  BossHp: 550
   BossSprite: {fileID: 21300000, guid: b0a08599e25691348811db324d32ebf8, type: 3}
   BossCriticalFruit: 2

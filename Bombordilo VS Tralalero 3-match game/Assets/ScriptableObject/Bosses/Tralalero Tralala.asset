@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Tralalero Tralala
   m_EditorClassIdentifier: 
   BossName: Tralalero Tralala
-  BossHp: 200
+  BossHp: 500
   BossSprite: {fileID: 21300000, guid: f02aa921c31f6b0419cf38268580d9a9, type: 3}
   BossPhase2Sprite: {fileID: 21300000, guid: 734b5c6f3754d5542bd58f5160411b91, type: 3}
-  BossPhase2Hp: 100
+  BossPhase2Hp: 250

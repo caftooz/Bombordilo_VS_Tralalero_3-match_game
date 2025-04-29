@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Rhino Rhino Strawberrini
   m_EditorClassIdentifier: 
   BossName: Rhino Rhino Strawberrini
-  BossHp: 50
+  BossHp: 200
   BossSprite: {fileID: 21300000, guid: a66c12e3268fd7f44a6488f4050a92b6, type: 3}
   BossCriticalFruit: 0

@@ -52,6 +52,10 @@ public class Board : MonoBehaviour
     [SerializeField] private AnimationCurve _burstScaleCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
     [SerializeField] private GameObject _burstItemPrefab;
 
+    [Header("MoveToBoss Items Animation Settings")]
+    [SerializeField] private float _moveToBossDuration = 0.2f;
+    [SerializeField] private AnimationCurve _moveToBossCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
     [Header("Firework Settings")]
     [SerializeField] private float _fireworkSpeed = 10f;
     [SerializeField] private float _fireworkDuration = 0.5f;
@@ -76,6 +80,7 @@ public class Board : MonoBehaviour
     public event Action DoStep;
     public event Action<FruitType> DamageBoss;
     public event Action DamageBossFirework;
+    public event Action<int> AddPoints;
 
     private Tile[,] _tiles;
     private List<Coroutine> _fallCoroutines = new List<Coroutine>();
@@ -124,7 +129,7 @@ public class Board : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 tiles[x, y] = Instantiate(_tilePrefab, transform).GetComponent<Tile>();
-                tiles[x, y].SetTileProp(x, y, _itemSize, _burstMaxScale, _burstDuration, _burstScaleCurve, _burstItemPrefab, DamageBoss);
+                tiles[x, y].SetTileProp(x, y, _itemSize, _burstMaxScale, _burstDuration, _burstScaleCurve, _burstItemPrefab, DamageBoss, AddPoints, _moveToBossDuration, _moveToBossCurve);
                 tiles[x, y].transform.localScale = Vector3.one * _tileSize;
                 tiles[x, y].transform.localPosition = new Vector3(x * (_tileSize), y * (_tileSize), 1);
                 tiles[x, y].gameObject.name = $"Tile[{x},{y}]";
@@ -491,6 +496,8 @@ public class Board : MonoBehaviour
     {
         foreach (var match in matches)
         {
+
+            AddPoints?.Invoke(50);
             int combinationNum = match.Length;
             Tile firstTile = match[0];
             firstTile.ClearItem();
@@ -755,6 +762,7 @@ public class Board : MonoBehaviour
             }
             IEnumerator UseFireworkCoss(Powerup firework1, Powerup firework2)
             {
+                AddPoints?.Invoke(250);
                 Tile f1Tile = firework1.GetComponentInParent<Tile>();
                 Tile f2Tile = firework2.GetComponentInParent<Tile>();
                 f1Tile.ClearItem();
@@ -768,6 +776,8 @@ public class Board : MonoBehaviour
             }
             IEnumerator UseFireworkTriple(Powerup firework, Powerup bomb, bool isHorisontal)
             {
+
+                AddPoints?.Invoke(400);
                 Tile bombTile = bomb.GetComponentInParent<Tile>();
                 bombTile.ClearItem();
 
@@ -818,6 +828,7 @@ public class Board : MonoBehaviour
             }
             IEnumerator UseSuperBomb(Powerup bomb1, Powerup bomb2)
             {
+                AddPoints?.Invoke(500);
                 Tile bomb2Tile = bomb2.GetComponentInParent<Tile>();
                 Destroy(bomb2Tile.Item.gameObject);
                 bomb2Tile.Item = null;
@@ -825,6 +836,7 @@ public class Board : MonoBehaviour
             }
             IEnumerator UseMultifruitWithPowerup(Powerup multifruit, Powerup powerup)
             {
+                AddPoints?.Invoke(600);
                 Tile multifruitTile = multifruit.GetComponentInParent<Tile>();
 
                 Vector3 startPosition = GetWorldPosition(multifruitTile.X, multifruitTile.Y);
@@ -876,6 +888,7 @@ public class Board : MonoBehaviour
             }
             void UseMultifruitWithMultifruit(Powerup multifruit, Powerup powerup)
             {
+                AddPoints?.Invoke(800);
                 multifruit.GetComponentInParent<Tile>().ClearItem();
                 powerup.GetComponentInParent<Tile>().ClearItem();
                 foreach (var tile in _tiles)
@@ -907,15 +920,19 @@ public class Board : MonoBehaviour
         switch (powerup.powerupType)
         {
             case PowerupType.FireworkH:
+                AddPoints?.Invoke(100);
                 yield return StartCoroutine(UseFirework(powerup, isHorizontal: true));
                 break;
             case PowerupType.FireworkV:
+                AddPoints?.Invoke(100);
                 yield return StartCoroutine(UseFirework(powerup, isHorizontal: false));
                 break;
             case PowerupType.Bomb:
+                AddPoints?.Invoke(200);
                 yield return StartCoroutine(UseBomb(powerup, _explosionRadius));
                 break;
             case PowerupType.Multifruit:
+                AddPoints?.Invoke(300);
                 yield return StartCoroutine(UseMultifruit(powerup, fruit));
                 break;
             default:
