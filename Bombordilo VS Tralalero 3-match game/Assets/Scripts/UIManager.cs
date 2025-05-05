@@ -102,6 +102,6 @@ public class UIManager : MonoBehaviour
 
     public void ResetStepSlider()
     {
-        _stepSlider.value = 32;
+        _stepSlider.value = 50;
     }
 }

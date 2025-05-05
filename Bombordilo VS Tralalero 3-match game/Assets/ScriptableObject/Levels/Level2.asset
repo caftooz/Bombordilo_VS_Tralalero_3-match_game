@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LevelNumber: 2
   Boss: {fileID: 11400000, guid: 0e66c18a2d70b514b8fb09f40accc991, type: 2}
-  Background: {fileID: 21300000, guid: 7bf83c02fca556d438377daba2269cb2, type: 3}
+  Background: {fileID: 9085546173938197295, guid: 4f71c9b1abdb7454a821906bb49c46aa, type: 3}
   PointsOnSilver: 2800
   PointsOnGold: 3500
