@@ -22,7 +22,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text _pointsTextWin;
     [SerializeField] private TMP_Text _pointsTextOver;
 
-    public event Action OnBossDeth;
+    public event Action OnBossDeath;
     public event Action OnStepEnd;
 
     public void SetBoss(int bossHP, int bossMaxHP, Sprite bossSprite)
@@ -87,7 +87,7 @@ public class UIManager : MonoBehaviour
         _panelMap.SetActive(true);
     }
 
-    public void SpendBossHP(int damage)
+    public void SpendBossHP(int damage, bool isCritical = false)
     {
         if (_bossHPSlider.value - damage > 0)
         {
@@ -96,7 +96,16 @@ public class UIManager : MonoBehaviour
         else
         {
             _bossHPSlider.value = 0;
-            OnBossDeth?.Invoke();
+            OnBossDeath?.Invoke();
+        }
+
+        if (isCritical)
+        {
+            _bossImage.GetComponentInParent<FlashEffect>().StartFlash(Color.red);
+        }
+        else
+        {
+            _bossImage.GetComponentInParent<FlashEffect>().StartFlash(Color.gray);
         }
     }
 

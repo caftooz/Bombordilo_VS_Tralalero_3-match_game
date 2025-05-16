@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: da0dc1906c3e9dc4b88eb538e4056d43
+guid: b06a6eb8e55dec1408b81844e0cc9e09
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -105,7 +105,7 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 512
+        width: 626
         height: 68
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -134,8 +134,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      HealthBarBackground_0: 8973336124164743851
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

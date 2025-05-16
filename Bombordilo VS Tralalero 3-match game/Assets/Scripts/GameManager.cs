@@ -34,7 +34,7 @@ public class GameManager : MonoBehaviour
         _board.DamageBossFirework += DamageBossFirework;
         _board.AddPoints += AddPoints;
 
-        _UIManager.OnBossDeth += BossDeth;
+        _UIManager.OnBossDeath += BossDeath;
         _UIManager.OnStepEnd += GameOver;
     }
 
@@ -47,29 +47,31 @@ public class GameManager : MonoBehaviour
     {
         if (_currentBoss is StandartBoss standartBoss && standartBoss.BossCriticalFruit == fruitType)
         {
-            _UIManager.SpendBossHP(_criticalFruitDamage);
+
+            _UIManager.SpendBossHP(_criticalFruitDamage, true);
+            
         }
         else
         {
-            _UIManager.SpendBossHP(_baseFruitDamage);
+            _UIManager.SpendBossHP(_baseFruitDamage, false);
         }
     }
     private void DamageBossFirework()
     {
         if (_currentBoss is SuperBoss)
         {
-            _UIManager.SpendBossHP(_criticalFireworkDamage);
+            _UIManager.SpendBossHP(_criticalFireworkDamage, true);
         }
         else
         {
-            _UIManager.SpendBossHP(_baseFireworkDamage);
+            _UIManager.SpendBossHP(_baseFireworkDamage, false);
         }
     }
     public void SetLevel(int levelNumber)
     {
         _currentLevelNumber = levelNumber;
 
-        _board.CrerateAndFillBoard();
+        _board.CreateAndFillBoard();
 
         _currentLevel = _levels.Where(l => l.LevelNumber == levelNumber).First();
         _currentBoss = _currentLevel.Boss;
@@ -89,7 +91,7 @@ public class GameManager : MonoBehaviour
 
         gameState = GameState.GamePlaying;
     }
-    private void BossDeth()
+    private void BossDeath()
     {
         if ( _currentBoss is SuperBoss superBoss && _currentBossPhase == 1)
         {

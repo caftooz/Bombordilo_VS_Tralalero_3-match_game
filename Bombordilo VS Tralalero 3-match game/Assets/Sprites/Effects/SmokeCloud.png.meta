@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: e8fdfdb072d7e5245b90ad9382283eea
+guid: fafef28dcf7acfb419a89c93d27c7230
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8198609879170079333
-    second: HealthBarFilled_0
+      213: 1824471915280670219
+    second: SmokeCloud_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: HealthBarFilled_0
+      name: SmokeCloud_0
       rect:
         serializedVersion: 2
-        x: 0
+        x: 5
         y: 0
-        width: 512
-        height: 68
+        width: 434
+        height: 365
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b952f04c0cfa83e80800000000000000
-      internalID: -8198609879170079333
+      spriteID: b0e1bfc5a83d15910800000000000000
+      internalID: 1824471915280670219
       vertices: []
       indices: 
       edges: []
@@ -134,8 +134,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      HealthBarFilled_0: -8198609879170079333
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

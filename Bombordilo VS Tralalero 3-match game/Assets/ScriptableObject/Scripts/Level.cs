@@ -11,4 +11,7 @@ public class Level : ScriptableObject
 
     public int PointsOnSilver;
     public int PointsOnGold;
+
+    public int Jellies;
+    public int Locks;
 }

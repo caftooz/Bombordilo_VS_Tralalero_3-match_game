@@ -17,3 +17,5 @@ MonoBehaviour:
   Background: {fileID: 9085546173938197295, guid: 4f71c9b1abdb7454a821906bb49c46aa, type: 3}
   PointsOnSilver: 2800
   PointsOnGold: 3500
+  Jellies: 0
+  Locks: 10

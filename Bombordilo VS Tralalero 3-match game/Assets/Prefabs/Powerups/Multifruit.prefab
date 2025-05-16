@@ -100,7 +100,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08922fa1b49142b4884144ce5f626208, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _sprite: {fileID: -5866511882185172738, guid: c124a22357c5d5f44879ef4dd8e49009, type: 3}
+  _sprite: {fileID: 21300000, guid: c124a22357c5d5f44879ef4dd8e49009, type: 3}
   Name: Multifruit
   CombinationNum: 6
   powerupType: 3
