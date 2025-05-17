@@ -21,6 +21,9 @@ public class GameManager : MonoBehaviour
     private int _currentPoints;
     private GameState gameState;
 
+    public GameObject bossObject;
+    public SpriteRenderer bossRenderer;
+
     private enum GameState
     {
         GameWin,
@@ -90,6 +93,8 @@ public class GameManager : MonoBehaviour
         );
 
         gameState = GameState.GamePlaying;
+
+        bossRenderer.enabled = true;
     }
     private void BossDeath()
     {
@@ -120,12 +125,14 @@ public class GameManager : MonoBehaviour
     {
         if (gameState == GameState.GamePlaying)
         {
+            bossObject.GetComponent<BossFly>().Fly();
             gameState = GameState.GameWin;
             _UIManager.GameWin();
 
             _UIManager.AvtivateStars(1);
             if (_currentPoints >= _currentLevel.PointsOnSilver) _UIManager.AvtivateStars(2);
             if (_currentPoints >= _currentLevel.PointsOnGold) _UIManager.AvtivateStars(3);
+
         }
     }
     public void NextLevel()

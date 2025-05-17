@@ -21,9 +21,14 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] private TMP_Text _pointsTextWin;
     [SerializeField] private TMP_Text _pointsTextOver;
+    [SerializeField] private TMP_Text _stepsText;
 
     public event Action OnBossDeath;
     public event Action OnStepEnd;
+
+    public static bool canStep;
+
+
 
     public void SetBoss(int bossHP, int bossMaxHP, Sprite bossSprite)
     {
@@ -42,9 +47,11 @@ public class UIManager : MonoBehaviour
     }
     public void SpendStep()
     {
+
         if (_stepSlider.value > 1)
         {
             _stepSlider.value--;
+            _stepsText.text = _stepSlider.value.ToString();
         }
         else
         {
@@ -111,6 +118,8 @@ public class UIManager : MonoBehaviour
 
     public void ResetStepSlider()
     {
+        _stepsText.text = "50";
         _stepSlider.value = 50;
+
     }
 }

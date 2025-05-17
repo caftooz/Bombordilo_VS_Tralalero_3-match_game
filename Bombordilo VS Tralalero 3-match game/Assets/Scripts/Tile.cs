@@ -142,12 +142,13 @@ public class Tile : MonoBehaviour
 
     public void Deselect(bool condition = true)
     {
+        if (Item == null) return;
         if(condition) IsSelected = false;
         Item.GetComponent<SpriteRenderer>().color = Color.white;
         Item.transform.localScale = Vector3.one * _itemSize;
     }
 
-    void OnMouseUpAsButton()
+    void OnMouseDown()
     {
         StartCoroutine(GetComponentInParent<Board>().ClickOnTile(this));
     }

@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class Board : MonoBehaviour
@@ -77,7 +76,6 @@ public class Board : MonoBehaviour
     [SerializeField] private float _laserFadeDuration = 0.2f;
 
     private bool _isPlayingAnim;
-    private bool _check;
 
     public event Action DoStep;
     public event Action<FruitType> DamageBoss;
