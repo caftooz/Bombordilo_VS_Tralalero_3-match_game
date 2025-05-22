@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Bronse_Button_0: 2428020274437738878
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

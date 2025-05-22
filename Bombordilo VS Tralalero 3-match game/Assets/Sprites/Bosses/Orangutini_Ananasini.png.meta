@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Orangutini_Ananasini_0: -2366827549752939736
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

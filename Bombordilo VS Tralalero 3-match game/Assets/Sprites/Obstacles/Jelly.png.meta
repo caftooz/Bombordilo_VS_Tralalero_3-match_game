@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Jelly_0: -1086197501266087201
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
