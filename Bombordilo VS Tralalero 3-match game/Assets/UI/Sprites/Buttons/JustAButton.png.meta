@@ -108,15 +108,37 @@ TextureImporter:
         width: 768
         height: 768
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 203, y: 207, z: 198, w: 200}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d7e73de3d4a198f45a9e6de01f7967b8
+      internalID: -1507079716
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: JustAButton_7
+      rect:
+        serializedVersion: 2
+        x: 257
+        y: 0
+        width: 256
+        height: 41
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: b096dc71091721230800000000000000
-      internalID: 3608071115165755659
+      spriteID: b60d9d3950210d048a1ba81b91eb8984
+      internalID: -546502437
       vertices: []
       indices: 
       edges: []
@@ -125,7 +147,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: bf61a1533a1502d4a9307b3cfb679a3a
     internalID: 0
     vertices: []
     indices: 
@@ -134,7 +156,16 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      JustAButton_0: -1507079716
+      JustAButton_1: -1740249970
+      JustAButton_2: -32296659
+      JustAButton_3: 176934661
+      JustAButton_4: 1016211525
+      JustAButton_5: -387711024
+      JustAButton_6: 1130657091
+      JustAButton_7: -546502437
+      JustAButton_8: 1799118797
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

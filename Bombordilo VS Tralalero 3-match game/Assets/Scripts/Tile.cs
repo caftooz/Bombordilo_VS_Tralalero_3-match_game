@@ -37,8 +37,6 @@ public class Tile : MonoBehaviour
 
     public Item Item { get; set; }
 
-    public bool canChange;
-
     private float _itemSize;
     public void CreateItem(Item item)
     {

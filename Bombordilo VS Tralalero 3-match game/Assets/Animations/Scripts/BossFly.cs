@@ -10,6 +10,8 @@ public class BossFly : MonoBehaviour
 
     public Animator animator;
 
+    public UIManager UIManager;
+
     public GameObject star;
     public void Fly()
     {
@@ -47,5 +49,6 @@ public class BossFly : MonoBehaviour
     public void EndLevel()
     {
         Destroy(star);
+        UIManager.GameWin();
     }
 }

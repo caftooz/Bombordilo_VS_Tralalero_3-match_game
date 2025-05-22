@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 27a1456ba35fb6c4e968e2d2ad44dd2d
+guid: ef735d72c47911546aff89cbb8d74080
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3464259086337698346
-    second: Load_Bar_Background_0
+      213: -4396553408129507553
+    second: Adjustment_Bar_Handle_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Load_Bar_Background_0
+      name: Adjustment_Bar_Handle_0
       rect:
         serializedVersion: 2
-        x: 13
-        y: 6
-        width: 337
-        height: 35
+        x: 0
+        y: 0
+        width: 129
+        height: 87
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 6d51ce427ba7cefc0800000000000000
-      internalID: -3464259086337698346
+      spriteID: f1f586028fd4cf2c0800000000000000
+      internalID: -4396553408129507553
       vertices: []
       indices: 
       edges: []
@@ -134,8 +134,7 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable:
-      Load_Bar_Background_0: -3464259086337698346
+    nameFileIdTable: {}
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

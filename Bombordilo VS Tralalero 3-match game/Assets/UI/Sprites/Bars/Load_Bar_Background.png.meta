@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 009db137bcc229b439681c2b9e64c870
+guid: 076eba2b2a2ec004fa5b2b8c7f1d046d
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -5658293464042859497
-    second: Adjustment_Bar_Toggle_0
+      213: -3464259086337698346
+    second: Load_Bar_Background_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Adjustment_Bar_Toggle_0
+      name: Load_Bar_Background_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 40
-        height: 40
+        width: 2160
+        height: 128
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 7149fc8c214b971b0800000000000000
-      internalID: -5658293464042859497
+      spriteID: 6d51ce427ba7cefc0800000000000000
+      internalID: -3464259086337698346
       vertices: []
       indices: 
       edges: []

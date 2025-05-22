@@ -40,7 +40,7 @@ public class Board : MonoBehaviour
         new Keyframe(0.5f, 1),
         new Keyframe(1, 0)
     );
-
+    
     [Header("Swap Animation Settings")]
     [SerializeField] private float _swapDuration = 0.1f;
     [SerializeField] private float _swapOvershoot = 0.2f;

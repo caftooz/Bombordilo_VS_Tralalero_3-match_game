@@ -103,10 +103,10 @@ TextureImporter:
       name: Adjustment_Bar_Fill_0
       rect:
         serializedVersion: 2
-        x: 3
-        y: 2
-        width: 283
-        height: 46
+        x: 0
+        y: 0
+        width: 2096
+        height: 256
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
