@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   LevelNumber: 5
   Boss: {fileID: 11400000, guid: 8a66e35f54b82994893a5d7745ed7aa4, type: 2}
-  Background: {fileID: 21300000, guid: 5e216fd325d61bb4db099ac250e87de0, type: 3}
+  Background: {fileID: -6146795774391780013, guid: 5e216fd325d61bb4db099ac250e87de0, type: 3}
   PointsOnSilver: 6000
   PointsOnGold: 7500
+  Jellies: 15
+  Locks: 15

@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using System;
+using Unity.VisualScripting;
 
 public class Tile : MonoBehaviour
 {
@@ -10,7 +11,6 @@ public class Tile : MonoBehaviour
     private GameObject _burstItemPrefab;
     private event Action<FruitType> _damageBoss;
     private event Action<int> _addPoints;
-
 
     private float _moveToBossDuration = 0.2f;
     private AnimationCurve _moveToBossCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
@@ -30,7 +30,7 @@ public class Tile : MonoBehaviour
         _moveToBossDuration = moveToBossDuration;
     }
 
-    public bool IsSelected { get; private set; } = false;
+    public bool IsSelected { get; set; } = false;
 
     public int X { get; private set; }
     public int Y { get; private set; }
@@ -131,16 +131,17 @@ public class Tile : MonoBehaviour
         Destroy(item.gameObject);
     }
 
-    public void Select(Color selectedColor, int mpSelectedSizePercent)
+    public void Select(Color selectedColor, int mpSelectedSizePercent = 100, bool condition = true)
     {
-        IsSelected = true;
+        if(condition) IsSelected = true;
         Item.GetComponent<SpriteRenderer>().color = selectedColor;
         Item.transform.localScale = Vector3.one * _itemSize * mpSelectedSizePercent / 100;
     }
 
-    public void Deselect()
+    public void Deselect(bool condition = true)
     {
-        IsSelected = false;
+        if (Item == null) return;
+        if(condition) IsSelected = false;
         Item.GetComponent<SpriteRenderer>().color = Color.white;
         Item.transform.localScale = Vector3.one * _itemSize;
     }
@@ -148,5 +149,15 @@ public class Tile : MonoBehaviour
     void OnMouseDown()
     {
         StartCoroutine(GetComponentInParent<Board>().ClickOnTile(this));
+    }
+
+    void OnMouseOver()
+    {
+        GetComponentInParent<Board>().OnTileOver(this);
+    }
+
+    void OnMouseExit()
+    {
+        GetComponentInParent<Board>().OnTileExit(this);
     }
 }

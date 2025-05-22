@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BossName: Mukka Bananukka
   BossHp: 300
-  BossSprite: {fileID: 21300000, guid: 8db087f6ffcde4349afc576081f1b760, type: 3}
+  BossSprite: {fileID: 4283201162663755170, guid: 8db087f6ffcde4349afc576081f1b760, type: 3}
   BossCriticalFruit: 1

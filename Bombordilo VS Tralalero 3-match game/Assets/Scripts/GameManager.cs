@@ -19,7 +19,9 @@ public class GameManager : MonoBehaviour
     private int _currentBossPhase = 1;
 
     private int _currentPoints;
-    private GameState gameState;
+    private GameState _gameState;
+
+    public SpriteRenderer bossRenderer;
 
     private enum GameState
     {
@@ -34,7 +36,7 @@ public class GameManager : MonoBehaviour
         _board.DamageBossFirework += DamageBossFirework;
         _board.AddPoints += AddPoints;
 
-        _UIManager.OnBossDeth += BossDeth;
+        _UIManager.OnBossDeath += BossDeath;
         _UIManager.OnStepEnd += GameOver;
     }
 
@@ -47,29 +49,32 @@ public class GameManager : MonoBehaviour
     {
         if (_currentBoss is StandartBoss standartBoss && standartBoss.BossCriticalFruit == fruitType)
         {
-            _UIManager.SpendBossHP(_criticalFruitDamage);
+
+            _UIManager.SpendBossHP(_criticalFruitDamage, true);
+            
         }
         else
         {
-            _UIManager.SpendBossHP(_baseFruitDamage);
+            _UIManager.SpendBossHP(_baseFruitDamage, false);
         }
     }
     private void DamageBossFirework()
     {
         if (_currentBoss is SuperBoss)
         {
-            _UIManager.SpendBossHP(_criticalFireworkDamage);
+            _UIManager.SpendBossHP(_criticalFireworkDamage, true);
         }
         else
         {
-            _UIManager.SpendBossHP(_baseFireworkDamage);
+            _UIManager.SpendBossHP(_baseFireworkDamage, false);
         }
     }
     public void SetLevel(int levelNumber)
     {
+
         _currentLevelNumber = levelNumber;
 
-        _board.CrerateAndFillBoard();
+        _board.CreateAndFillBoard();
 
         _currentLevel = _levels.Where(l => l.LevelNumber == levelNumber).First();
         _currentBoss = _currentLevel.Boss;
@@ -87,9 +92,11 @@ public class GameManager : MonoBehaviour
             bossSprite: _currentBoss.BossSprite
         );
 
-        gameState = GameState.GamePlaying;
+        _gameState = GameState.GamePlaying;
+
+        bossRenderer.enabled = true;
     }
-    private void BossDeth()
+    private void BossDeath()
     {
         if ( _currentBoss is SuperBoss superBoss && _currentBossPhase == 1)
         {
@@ -108,37 +115,40 @@ public class GameManager : MonoBehaviour
     }
     private void GameOver()
     {
-        if (gameState == GameState.GamePlaying)
+        if (_gameState == GameState.GamePlaying)
         {
-            gameState = GameState.GameOver;
+            _gameState = GameState.GameOver;
             _UIManager.GameOver();
         }
     }
     private void GameWin()
     {
-        if (gameState == GameState.GamePlaying)
+        if (_gameState == GameState.GamePlaying)
         {
-            gameState = GameState.GameWin;
-            _UIManager.GameWin();
-
-            _UIManager.AvtivateStars(1);
-            if (_currentPoints >= _currentLevel.PointsOnSilver) _UIManager.AvtivateStars(2);
-            if (_currentPoints >= _currentLevel.PointsOnGold) _UIManager.AvtivateStars(3);
+            bossRenderer.GetComponentInParent<BossFly>().Fly();
+            _gameState = GameState.GameWin;
         }
+    }
+
+    public void ActivateStars()
+    {
+        _UIManager.ActivateStars(1);
+        if (_currentPoints >= _currentLevel.PointsOnSilver) _UIManager.ActivateStars(2);
+        if (_currentPoints >= _currentLevel.PointsOnGold) _UIManager.ActivateStars(3);
     }
     public void NextLevel()
     {
         if (_currentLevelNumber == _levels.Max(level => level.LevelNumber))
         {
-            SetLevel(1);
+            _UIManager.SetLevel(1);
         }
         else
         {
-            SetLevel(_currentLevelNumber + 1);
+            _UIManager.SetLevel(_currentLevelNumber + 1);
         }
     }
     public void ResetLevel()
     {
-        SetLevel(_currentLevelNumber);
+        _UIManager.SetLevel(_currentLevelNumber);
     }
 }

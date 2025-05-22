@@ -40,7 +40,7 @@ public class Board : MonoBehaviour
         new Keyframe(0.5f, 1),
         new Keyframe(1, 0)
     );
-
+    
     [Header("Swap Animation Settings")]
     [SerializeField] private float _swapDuration = 0.1f;
     [SerializeField] private float _swapOvershoot = 0.2f;
@@ -85,7 +85,29 @@ public class Board : MonoBehaviour
     private Tile[,] _tiles;
     private List<Coroutine> _fallCoroutines = new List<Coroutine>();
 
-    public void CrerateAndFillBoard()
+    private bool isPaused = false;
+    private void Update()
+    {
+        ManagePause();
+    }
+
+    public void ManagePause()
+    {
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            if (isPaused)
+            {
+                Time.timeScale = 1;
+                isPaused = false;
+            }
+            else
+            {
+                Time.timeScale = 0;
+                isPaused = true;
+            }
+        }
+    }
+    public void CreateAndFillBoard()
     {
         ClearBoard();
 
@@ -120,7 +142,7 @@ public class Board : MonoBehaviour
                 }
             }
         } while (hasMatches);
-    }
+    } 
     private Tile[,] CreateBoard(int width, int height)
     {
         Tile[,] tiles = new Tile[width, height];
@@ -539,6 +561,27 @@ public class Board : MonoBehaviour
             return false;
         }
     }
+
+    public void OnTileOver(Tile tile)
+    {
+        if (_previousSelected != null && !_isPlayingAnim)
+        {
+            if( (System.Math.Abs(_previousSelected.Y - tile.Y) == 1 && _previousSelected.X == tile.X) ||
+                 System.Math.Abs(_previousSelected.X - tile.X) == 1 && _previousSelected.Y == tile.Y)
+            {
+                tile.Select(_selectedColor, condition: false);
+            }
+        }
+    }
+
+    public void OnTileExit(Tile tile)
+    {
+        if (tile != _previousSelected)
+        {
+            tile.Deselect(condition: false);
+        }
+    }
+
     public IEnumerator ClickOnTile(Tile tile)
     {
 
@@ -567,6 +610,7 @@ public class Board : MonoBehaviour
             }
             else
             {
+                if(tile.Item != null) tile.Deselect(condition: false);
                 if ( System.Math.Abs(_previousSelected.X - tile.X) > 1 || System.Math.Abs(_previousSelected.Y - tile.Y) > 1 || 
                     System.Math.Abs(_previousSelected.X - tile.X) == System.Math.Abs(_previousSelected.Y - tile.Y))
                 {
@@ -953,13 +997,14 @@ public class Board : MonoBehaviour
         fireworkTile.ClearItem();
 
         // Создаем два фейерверка, которые летят в противоположные стороны
-        Quaternion angle1 = isHorizontal ? Quaternion.Euler(0, 0, 180)   : Quaternion.Euler(0, 0, -90);
-        Quaternion angle2 = isHorizontal ? Quaternion.Euler(0, 0, 0) : Quaternion.Euler(0, 0,  90);
+        Quaternion angle1 = isHorizontal ? Quaternion.Euler(0, 0, 0)   : Quaternion.Euler(0, 0,  90);
+        Quaternion angle2 = isHorizontal ? Quaternion.Euler(0, 0, 180) : Quaternion.Euler(0, 0, -90);
 
         GameObject firework1 = Instantiate(_flyingFireworkPrefab, GetWorldPosition(fireworkTile.X, fireworkTile.Y), angle1);
         firework1.transform.localScale = Vector3.one * _itemSize;
         GameObject firework2 = Instantiate(_flyingFireworkPrefab, GetWorldPosition(fireworkTile.X, fireworkTile.Y), angle2);
         firework2.transform.localScale = Vector3.one * _itemSize;
+
 
         // Направления движения
         Vector3 dir1 = isHorizontal ? Vector3.right : Vector3.up;
